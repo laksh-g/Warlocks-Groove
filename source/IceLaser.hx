@@ -5,17 +5,23 @@ import flixel.FlxSprite;
 import flixel.math.FlxAngle;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVelocity;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 
 class IceLaser extends Projectile
 {
 	public var canvas:FlxSprite;
 
-	public function new(x:Float, y:Float, target:FlxObject, timing:JudgeType, enchanted:Bool)
+	public function new(x:Float, y:Float, target:FlxObject, timing:JudgeType, enchanted:Bool, Length:Float, Rotation:Float)
 	{
 		super(x, y, target, LevelState.AttackType.PURPLE, timing, enchanted);
 		MOVEMENT_SPEED = 600;
-		makeGraphic(5, 5, FlxColor.PURPLE);
+		// makeGraphic(5, 5, FlxColor.PURPLE);
+		loadGraphic("assets/images/laser.png");
+		angle = Rotation;
+		scale.set(Length / pixels.width, 1);
+		origin.set(0, pixels.height / 2);
 
 		switch (timing)
 		{
@@ -37,8 +43,15 @@ class IceLaser extends Projectile
 			_speed *= 1.2;
 		}
 
-		_heading = FlxG.mouse.getPosition();
-		FlxVelocity.moveTowardsPoint(this, _heading, _speed);
+		// _heading = FlxG.mouse.getPosition();
+		// FlxVelocity.moveTowardsPoint(this, _heading, _speed);
+		FlxTween.tween(this, {alpha: 0}, 0.4, {
+			onComplete: function(t:FlxTween)
+			{
+				kill();
+			},
+			ease: FlxEase.quadOut
+		});
 	}
 
 	override function update(elapsed:Float)

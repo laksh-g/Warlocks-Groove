@@ -70,7 +70,6 @@ class MagMissile extends Projectile
 		}
 		else if (blow)
 		{
-			trace("dmg = 0");
 			_damage = 0;
 		}
 		AI(elapsed);
@@ -96,7 +95,6 @@ class MagMissile extends Projectile
 	private function kill_projectile()
 	{
 		super.kill();
-		trace("projectile killed");
 	}
 
 	private function AI(elapsed:Float)

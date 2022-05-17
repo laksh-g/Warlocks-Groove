@@ -7,7 +7,10 @@ import flixel.FlxState;
 import flixel.FlxSubState;
 import flixel.addons.display.shapes.*;
 import flixel.addons.editors.ogmo.FlxOgmo3Loader;
+import flixel.addons.nape.FlxNapeSpace;
+import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.math.FlxAngle;
 import flixel.system.FlxSound;
 import flixel.text.FlxText;
 import flixel.tile.FlxTilemap;
@@ -16,6 +19,15 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxTimer;
+import nape.geom.GeomPoly;
+import nape.geom.GeomPolyList;
+import nape.geom.Ray;
+import nape.geom.RayResultList;
+import nape.geom.Vec2;
+import nape.phys.Body;
+import nape.phys.BodyType;
+import nape.phys.Material;
+import nape.shape.Polygon;
 
 using flixel.math.FlxPoint;
 using flixel.util.FlxSpriteUtil;
@@ -161,6 +173,8 @@ class LevelState extends FlxState
 	{
 		super.create();
 		FlxG.worldBounds.set(-65536, -65536, 65536 * 2, 65536 * 2);
+		FlxNapeSpace.init();
+		FlxNapeSpace.createWalls(0, 0, FlxG.width, FlxG.height);
 		_player = new Player(50, 50);
 		add(_player);
 		FlxG.camera.follow(_player, TOPDOWN, 1);
@@ -288,10 +302,11 @@ class LevelState extends FlxState
 			{
 				var closest_mons = get_closest_monster(proj.x, proj.y, _monsters);
 				proj.update_target(closest_mons);
-				if (proj.getType() == LevelState.AttackType.PURPLE)
-				{
-					handleProjectileRaycasts(cast(proj, IceLaser));
-				}
+				// if (proj.getType() == LevelState.AttackType.PURPLE)
+				// {
+				// 	handleProjectileRaycasts(cast(proj, IceLaser));
+
+				// }
 			}
 		}
 		FlxG.overlap(_monsters, _player, handleMonsterPlayerOverlap);
@@ -443,7 +458,6 @@ class LevelState extends FlxState
 				monsters.kill();
 			}
 			projectiles.kill();
-			trace("projectile kill initiated");
 		}
 	}
 
@@ -572,17 +586,18 @@ class LevelState extends FlxState
 					if (closest_tick.getType() == LevelState.AttackType.RED)
 					{
 						proj = new MagMissile(_player.x, _player.y, _monsters.getFirstAlive(), timing, closest_tick.getEnchanted() && timing == PERFECT);
+						proj.timer.start(2.0, function(Timer:FlxTimer)
+						{
+							// proj.canvas.exists = false;
+							proj.kill();
+						}, 1);
+						_projectiles.add(proj);
 					}
-					else // if (closest_tick.getType() == LevelState.AttackType.PURPLE)
+					else if (closest_tick.getType() == LevelState.AttackType.PURPLE)
 					{
-						proj = new IceLaser(_player.x, _player.y, _monsters.getFirstAlive(), timing, closest_tick.getEnchanted() && timing == PERFECT);
+						// proj = new IceLaser(_player.x, _player.y, _monsters.getFirstAlive(), timing, closest_tick.getEnchanted() && timing == PERFECT);
+						shootLaser(_monsters.getFirstAlive(), timing, closest_tick.getEnchanted() && timing == PERFECT);
 					}
-					proj.timer.start(2.0, function(Timer:FlxTimer)
-					{
-						// proj.canvas.exists = false;
-						proj.kill();
-					}, 1);
-					_projectiles.add(proj);
 					Logger.playerShot(Std.string(closest_tick.getType()), judge, Std.string(diff));
 				}
 			}
@@ -649,6 +664,47 @@ class LevelState extends FlxState
 		var line_style_2 = {color: FlxColor.BLUE, thickness: 3.0};
 		var drawStyle:DrawStyle = {smoothing: true};
 		p.canvas.drawLine(p.origin_point.x, p.origin_point.y, p.x + 2, p.y + 2, line_style_2, drawStyle);
+	}
+
+	private function shootLaser(target:FlxObject, timing:JudgeType, enchanted:Bool)
+	{
+		var ground:Float = FlxG.height - 100;
+		var source:FlxPoint = _player.getMidpoint();
+		var mouse:FlxPoint = FlxG.mouse.getWorldPosition();
+		var deg:Float = source.angleBetween(mouse) - 90;
+		var groundPoint = FlxPoint.get(source.x + (ground - source.y) / Math.tan(deg * FlxAngle.TO_RAD), ground); // Work on this
+		var length:Float = source.distanceTo(groundPoint);
+		var laser:IceLaser = new IceLaser(source.x, source.y, target, timing, enchanted, length, deg);
+		_projectiles.add(laser);
+
+		var sP = Vec2.get(source.x, source.y);
+		var eP = Vec2.get(groundPoint.x, groundPoint.y + 1); // +1 make sure no tiny gap in between groundPoint and groundY
+		var ray = Ray.fromSegment(sP, eP);
+
+		if (ray.maxDistance > 5)
+		{
+			var rayResultList:RayResultList = FlxNapeSpace.space.rayMultiCast(ray);
+			for (rayResult in rayResultList)
+			{
+				trace("Rayresult : ", rayResult.toString());
+				var orgBody:Body = rayResult.shape.body;
+				trace("orgBody : ", orgBody.toString());
+				if (orgBody.isStatic())
+					continue;
+				var orgPoly:Polygon = rayResult.shape.castPolygon;
+				trace("orgPoly : ", orgPoly.toString());
+				// If the shape's not polygon eg. a circle, it can't get cut
+				// You can use a regular polygon to simulate a circle instead
+				if (orgPoly == null)
+					continue;
+				var orgPhySpr:FlxNapeSprite = orgBody.userData.flxSprite;
+				trace("Sprite", orgPhySpr.toString());
+				// if (orgPhySpr != null)
+				// 	applyCut(orgPhySpr, sP, eP);
+			}
+		}
+		sP.dispose();
+		eP.dispose();
 	}
 
 	// private function debugTickDisplay()

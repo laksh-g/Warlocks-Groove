@@ -2,6 +2,7 @@
 
 NOTE: must install random package: `haxelib install random`
 `haxelib install howlerjs 2.0.4`
+`haxelib install nape-haxe4 2.0.22`
 Rhythm based top down shooter
 
 ## Getting started

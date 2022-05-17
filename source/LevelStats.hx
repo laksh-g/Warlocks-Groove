@@ -53,7 +53,7 @@ class LevelStats extends BaseLevel
 				ticks_len = 16;
 			case -1: // Only for testing purposes ...to be removed
 				bpm = 130;
-				tick_format = [RED, PURPLE, RED, PURPLE];
+				tick_format = [PURPLE, PURPLE, PURPLE, PURPLE];
 				shortest_note = QUARTER;
 				snpq = 1;
 				scroll_mul = 350;
