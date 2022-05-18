@@ -86,17 +86,6 @@ class WaterStrider extends Enemy
 			velocity.set(0, 0);
 			acceleration.set(0, 0);
 			prop_vel = FlxVelocity.velocityFromAngle(Random.float(0, 360), _speed);
-			while (_tilemap.ray(this.getMidpoint(),
-				this.getMidpoint()
-					.add(_size / 2
-						+ prop_vel.x * _speed
-						+ acceleration.x * ACTION_TIME,
-						_size / 2 * 128 / 144
-						+ prop_vel.y * _speed
-						+ acceleration.y * ACTION_TIME)))
-			{
-				prop_vel.rotate(FlxPoint.weak(0, 0), 90);
-			}
 			_counter = 0;
 		}
 
