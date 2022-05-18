@@ -11,7 +11,7 @@ class Logger
 	private static var user_id:String;
 	// test categories: 0 = debugging
 	// 1 = 1st iteration
-	private static var TEST_CATEGORY = 0;
+	private static var TEST_CATEGORY = 2;
 	public static var active = false;
 	public static var last_player_action:Float;
 	private static var timer:Timer;
