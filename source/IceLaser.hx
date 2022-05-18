@@ -13,15 +13,15 @@ class IceLaser extends Projectile
 {
 	public var canvas:FlxSprite;
 
-	public function new(x:Float, y:Float, target:FlxObject, timing:JudgeType, enchanted:Bool, Length:Float, Rotation:Float)
+	public function new(x:Float, y:Float, target:FlxObject, timing:JudgeType, enchanted:Bool)
 	{
 		super(x, y, target, LevelState.AttackType.PURPLE, timing, enchanted);
-		MOVEMENT_SPEED = 600;
-		// makeGraphic(5, 5, FlxColor.PURPLE);
-		loadGraphic("assets/images/laser.png");
-		angle = Rotation;
-		scale.set(Length / pixels.width, 1);
-		origin.set(0, pixels.height / 2);
+		MOVEMENT_SPEED = 400;
+		makeGraphic(5, 5, FlxColor.PURPLE);
+		// loadGraphic("assets/images/laser.png");
+		// angle = Rotation;
+		// scale.set(Length / pixels.width, 1);
+		// origin.set(0, pixels.height / 2);
 
 		switch (timing)
 		{
@@ -43,15 +43,19 @@ class IceLaser extends Projectile
 			_speed *= 1.2;
 		}
 
-		// _heading = FlxG.mouse.getPosition();
+		_heading = FlxG.mouse.getPosition();
 		// FlxVelocity.moveTowardsPoint(this, _heading, _speed);
-		FlxTween.tween(this, {alpha: 0}, 0.4, {
-			onComplete: function(t:FlxTween)
-			{
-				kill();
-			},
-			ease: FlxEase.quadOut
-		});
+
+		velocity.set(MOVEMENT_SPEED, 0);
+		velocity.rotate(FlxPoint.weak(0, 0), FlxAngle.angleBetweenPoint(this, _heading, true));
+
+		// FlxTween.tween(this, {alpha: 0}, 0.4, {
+		// 	onComplete: function(t:FlxTween)
+		// 	{
+		// 		kill();
+		// 	},
+		// 	ease: FlxEase.quadOut
+		// });
 	}
 
 	override function update(elapsed:Float)
@@ -69,8 +73,26 @@ class IceLaser extends Projectile
 		super.kill();
 	}
 
-	private function AI()
+	private function AI() {}
+}
+
+class LaserBeam extends FlxSprite
+{
+	public function new(x:Float, y:Float, Length:Float, Rotation:Float)
 	{
-		var ray = 0; // MAKE LASER
+		super(x, y);
+		makeGraphic(5, 5, FlxColor.PURPLE);
+		loadGraphic("assets/images/laser.png");
+		angle = Rotation;
+		scale.set(Length / pixels.width, 1);
+		origin.set(0, pixels.height / 2);
+
+		FlxTween.tween(this, {alpha: 0}, 0.4, {
+			onComplete: function(t:FlxTween)
+			{
+				kill();
+			},
+			ease: FlxEase.quadOut
+		});
 	}
 }

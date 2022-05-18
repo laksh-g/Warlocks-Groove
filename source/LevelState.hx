@@ -1,5 +1,6 @@
 package;
 
+import IceLaser.LaserBeam;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -28,6 +29,11 @@ import nape.phys.Body;
 import nape.phys.BodyType;
 import nape.phys.Material;
 import nape.shape.Polygon;
+import nape.space.Space;
+import nape.util.BitmapDebug;
+import nape.util.Debug;
+import nape.util.ShapeDebug;
+import openfl.display.DisplayObject;
 
 using flixel.math.FlxPoint;
 using flixel.util.FlxSpriteUtil;
@@ -457,7 +463,10 @@ class LevelState extends FlxState
 				_monsters.remove(cast(monsters, Enemy));
 				monsters.kill();
 			}
-			projectiles.kill();
+			if (projectiles.getType() != PURPLE)
+			{
+				projectiles.kill();
+			}
 		}
 	}
 
@@ -668,43 +677,17 @@ class LevelState extends FlxState
 
 	private function shootLaser(target:FlxObject, timing:JudgeType, enchanted:Bool)
 	{
-		var ground:Float = FlxG.height - 100;
+		// var ground:Float = FlxG.height - 100;
 		var source:FlxPoint = _player.getMidpoint();
-		var mouse:FlxPoint = FlxG.mouse.getWorldPosition();
+		var mouse:FlxPoint = FlxG.mouse.getPosition();
 		var deg:Float = source.angleBetween(mouse) - 90;
-		var groundPoint = FlxPoint.get(source.x + (ground - source.y) / Math.tan(deg * FlxAngle.TO_RAD), ground); // Work on this
-		var length:Float = source.distanceTo(groundPoint);
-		var laser:IceLaser = new IceLaser(source.x, source.y, target, timing, enchanted, length, deg);
+		// var groundPoint = FlxPoint.get(source.x + (ground - source.y) / Math.tan(deg * FlxAngle.TO_RAD), ground); // Work on this
+		var length:Float = 1000; // source.distanceTo(groundPoint);
+
+		var laser:IceLaser = new IceLaser(source.x, source.y, target, timing, enchanted);
 		_projectiles.add(laser);
-
-		var sP = Vec2.get(source.x, source.y);
-		var eP = Vec2.get(groundPoint.x, groundPoint.y + 1); // +1 make sure no tiny gap in between groundPoint and groundY
-		var ray = Ray.fromSegment(sP, eP);
-
-		if (ray.maxDistance > 5)
-		{
-			var rayResultList:RayResultList = FlxNapeSpace.space.rayMultiCast(ray);
-			for (rayResult in rayResultList)
-			{
-				trace("Rayresult : ", rayResult.toString());
-				var orgBody:Body = rayResult.shape.body;
-				trace("orgBody : ", orgBody.toString());
-				if (orgBody.isStatic())
-					continue;
-				var orgPoly:Polygon = rayResult.shape.castPolygon;
-				trace("orgPoly : ", orgPoly.toString());
-				// If the shape's not polygon eg. a circle, it can't get cut
-				// You can use a regular polygon to simulate a circle instead
-				if (orgPoly == null)
-					continue;
-				var orgPhySpr:FlxNapeSprite = orgBody.userData.flxSprite;
-				trace("Sprite", orgPhySpr.toString());
-				// if (orgPhySpr != null)
-				// 	applyCut(orgPhySpr, sP, eP);
-			}
-		}
-		sP.dispose();
-		eP.dispose();
+		var laserGraphic:FlxSprite = new LaserBeam(source.x, source.y, length, deg);
+		add(laserGraphic);
 	}
 
 	// private function debugTickDisplay()
